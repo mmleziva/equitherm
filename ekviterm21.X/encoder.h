@@ -9,13 +9,13 @@
 //#define FLASH 0x1000 //address of dataflash in program memory
 #define SW _RA10
 //#include <xc.h> // include processor files - each processor file is guarded.  
-extern PARAMETERS par;
+extern volatile PARAMETERS par;
 extern int inkrem;
 extern bool CONT,RETE;
 extern bool EPW;
 extern unsigned int j;
 //extern int k;
 extern _prog_addressT pq,qq;
-inline void initEncoder(void);
+void initEncoder(void);
 #endif	/* ENCODER_H */
 

@@ -6,16 +6,12 @@ bool signum;
 _Q16 integ,difla;
 
 /*calc temperature of Pt1000 sensor with pull up resistor 1000ohm about -50 ..+100°C*/
-//_Q16 Pt1000(int adc)
 _Q16 Pt1000(_Q16 adc)
 {
      fixed aux, coef,delta;
-     //aux.I=adc;
-     //aux.F=0;
      aux.IF=adc;
      coef.I=1;
      coef.F=0;
-     //delta.IF=  _Q16mpy(aux.IF, 0x20);
      delta.IF=  (aux.IF >> 15);
      coef.IF  += delta.IF;
      aux.IF= _Q16mpy(aux.IF, coef.IF);

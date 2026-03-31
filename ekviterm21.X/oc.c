@@ -1,13 +1,16 @@
 
 #include "oc.h"
-inline void setOCpins(void)
+//inline
+//void
+void setOCpins(void)
 {
     RPOR2bits.RP39R = 0x10; // OC1 on RP39
     RPOR3bits.RP40R = 0x11; // OC2 on RP40
    // RPOR6bits.RP55R = 0x12; // OC3 on RP55
 }
 
-inline void initOC(void)
+//inline 
+void initOC(void)
 {
     setOCpins();
     //OC1RS= 0xffff;

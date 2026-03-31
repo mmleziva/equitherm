@@ -21,7 +21,8 @@
 #include "analog.h"
 
 unsigned long int talpre;
-inline void initOsc()
+//inline
+void initOsc()
 {
      //  OSCCONbits.NOSC= 7; //internal RC divided by N
     CLKDIVbits.FRCDIV=1;//FRC divided by 2

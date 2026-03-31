@@ -9,7 +9,8 @@
 extern bool TRUN,REQ;
 #define LONG 19
 extern char disp[2*LONG];
-inline void cfgLCD(void);
+//inline
+void cfgLCD(void);
 void wristrLCD(int N);
 void strc(int k);
 void strp(int ipar, bool NASTAV);

@@ -4,6 +4,6 @@
 
 #include <xc.h> // include processor files - each processor file is guarded. 
 
-inline void initOC(void);
+void initOC(void);
 #endif	/* OC_H */
 

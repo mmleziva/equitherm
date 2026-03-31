@@ -20,13 +20,15 @@ const char napis[NPAR][LONG-2]={
     "Vypoc.ekvit.tep."
 };
 
-inline void setU1pins(void)
+//inline 
+void setU1pins(void)
 {
     RPINR18bits.U1RXR = 20; // U1RX on RP20
     RPOR1bits.RP36R = 0x01; // U1TX on RP36
 }
 // UART Configuration
-inline void cfgUart1(void)
+//inline
+void cfgUart1(void)
 {    
     setU1pins();   
 	U1MODEbits.STSEL = 0;			// 1-stop bit
