@@ -2,11 +2,12 @@
 #include "user.h"
 #define IMAX 0x0fff
 #define MINPULS 0x0400//t
+#define KT_INV (1/0.0039083)
 bool signum;
 _Q16 integ,difla;
 
 /*calc temperature of Pt1000 sensor with pull up resistor 1000ohm about -50 ..+100°C*/
-_Q16 Pt1000(_Q16 adc)
+/*_Q16 Pt1000(_Q16 adc)
 {
      fixed aux, coef,delta;
      aux.IF=adc;
@@ -16,6 +17,18 @@ _Q16 Pt1000(_Q16 adc)
      coef.IF  += delta.IF;
      aux.IF= _Q16mpy(aux.IF, coef.IF);
      aux.IF= aux.IF >>6;
+     return aux.IF;
+}
+*/
+_Q16 Pt1000(_Q16 adc)
+{
+     fixed aux, coef,delta,pre;
+     delta.IF=adc>>16;
+     pre.IF= _Q16mpy(delta.IF, delta.IF);
+     aux.IF= delta.IF + 2*pre.IF;
+     coef.F=0;
+     coef.I=(4*KT_INV);
+     aux.IF= _Q16mpy(aux.IF, coef.IF);
      return aux.IF;
 }
 

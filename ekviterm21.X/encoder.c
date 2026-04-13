@@ -4,11 +4,10 @@
 #define Trw T[2]
 #define INKMAX 0xff
 #define NEKDELAY 100
-//#define DECI (0x10000/10)
 #define INTQ16  (0x10000) 
 #define DELTEQ  (2*INTQ16)
 #define DELTREV (5*INTQ16)
-fixed T[4],Tac, Trwac, Tacred;
+volatile fixed T[4],Tac;
 bool INK1O,SWOL,CONT,INK1F,INK1FO,INK2F,INK2O;
 bool CW,CCW, E, EKENA,EPW, TSCAN,RETE,REGRET;
 volatile PARAMETERS par;
@@ -135,7 +134,7 @@ void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)k
   }
 }
 
-void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/(7370/4)kHz= 8850ms 
+void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((7370/4)kHz)= 8850ms 
 {  
   _T5IF=0;
   //E=EKENA;      //t
@@ -191,7 +190,7 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/(737
 }
 
 /*auxial LEDs switch on*/
-void __attribute__((interrupt, no_auto_psv)) _T3Interrupt (void)//4*65500/(7370/4)kHz= 136ms 
+void __attribute__((interrupt, no_auto_psv)) _T3Interrupt (void)//4*65500/((7370/4)kHz)= 136ms 
 {
   _T3IF=0;
   switch(k)
