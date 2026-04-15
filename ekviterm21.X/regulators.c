@@ -33,7 +33,7 @@ _Q16 Pt1000(_Q16 adc)
 }
 
 _Q16 equitherm(_Q16 slope ,_Q16 Toa, _Q16 shift)
-{
+{                   //equitherm: Tc= 25+ shift;  dT= Tc - Toa ; result = Tc + slope * dT;
    fixed Tc;
    _Q16 dT,result;
    Tc.I=25;
@@ -47,7 +47,7 @@ _Q16 equitherm(_Q16 slope ,_Q16 Toa, _Q16 shift)
 }
 
 unsigned int PID(_Q16 delta ,unsigned int Kp, unsigned int Ki,unsigned int Kd,unsigned int limit)
-{
+{   //result= Kp*delta + Ki*(integ= integ + delta)+ (-dif+ (dif=Kd * delta));   
    fixed fko, sgsum;
    _Q16  sum,dif;
    int result;

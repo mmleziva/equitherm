@@ -5,8 +5,6 @@ int ad[4],ji;
 SHORT daf;
 volatile fixed fil[4];
 _Q16 deltafil[4];
-//fixed *pf;
-//int *pa;
 
 void initAdc1(void)
 {
@@ -40,6 +38,7 @@ AD1CSSLbits.CSS1=1; //select AN1 for input scan
 AD1CSSLbits.CSS2=1; //select AN2 for input scan
 AD1CSSLbits.CSS3=1; //select AN3 for input scan
 AD1CON1bits.ADON = 1;
+_AD1IP=4;  //int priority
 _AD1IE=1;
 //Delay_us(20);
 }

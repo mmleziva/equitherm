@@ -13,23 +13,19 @@ void setOCpins(void)
 void initOC(void)
 {
     setOCpins();
-    //OC1RS= 0xffff;
     OC1CON1bits.OCTSEL=3;//T5CK time source
     OC1CON1bits.OCM= 6;//PWM
-    // OC1CON2bits.SYNCSEL=0x1f;//OC1RS trigger 
      OC1CON2bits.SYNCSEL=0x0;//no trigger 
      OC1CON2bits.TRIGSTAT= 1;
-    _OC1IE=1;
-    //OC2RS= 0xffff;
+  //  _OC1IE=1; //t
     OC2CON1bits.OCTSEL=3;//T5CK time source
     OC2CON1bits.OCM= 6;//PWM
-    //OC2CON2bits.SYNCSEL=0x1f;//OC2RS trigger 
     OC2CON2bits.SYNCSEL=0x0;//t  no trigger 
      OC2CON2bits.TRIGSTAT= 1;
     T5CONbits.TCKPS =3;//1:256 prescaller T5CLK
-    //PR5= OC1RS-0x10;//timer 5 advance
     _T5IF= 0;
     _T5IE= 1;
+    _T5IP= 2;
     T5CONbits.TON= 1;
     
     OC3R= 0x00;

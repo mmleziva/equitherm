@@ -6,13 +6,14 @@
 #define NEKDELAY 100
 #define INTQ16  (0x10000) 
 #define DELTEQ  (2*INTQ16)
-#define DELTREV (5*INTQ16)
+#define DELTREV (4*INTQ16)
+#define DELTREVSUP (10*INTQ16)
 volatile fixed T[4],Tac;
 bool INK1O,SWOL,CONT,INK1F,INK1FO,INK2F,INK2O;
-bool CW,CCW, E, EKENA,EPW, TSCAN,RETE,REGRET;
+bool CW,CCW, E, EKENA,EPW, TSCAN,RETE,REGRET, LARGEDIF;
 volatile PARAMETERS par;
 unsigned int j, stroke, nek;
-int inkrem, a, minim;
+int volatile inkrem, a, minim;
  _Q16  delte,delterev,del;
  fixed Eqshift,Eqsteep;
 _prog_addressT pq,qq;
@@ -30,6 +31,7 @@ void initEncoder(void)
     T4CONbits.TON = 1;		// turn on timer4 
     _T4IF=0;
     _T4IE=1;
+    _T4IP=3;    //priority
     _init_prog_address(pq, dat);  /* get address in program space */
     qq= pq;
     qq= _memcpy_p2d16(par.A, qq, NVPAR*2);
@@ -107,16 +109,16 @@ void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)k
      OC3RS= (inkrem<<8)+1;//t
   }
   else if(TSCAN)
-  {
+  {         //if a new measurement was scanned
      TSCAN= false;
      if(k>=NVPAR)
-     {
+     {      //if the temperature is displayed
       inkrem= par.A[k];
       RETE= true;
      }
   }
   if(!PUMPIN)
-  {
+  {     //if PUMPing servo enable 
       EKENA= true;
       nek=0;
   }
@@ -126,7 +128,7 @@ void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)k
    {
     nek++;
     if(nek > NEKDELAY)
-    {
+    {       //If it is not pumped, the servo is deactivated with a delay.
      EKENA= false;
      nek=0;
     }
@@ -137,13 +139,11 @@ void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)k
 void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((7370/4)kHz)= 8850ms 
 {  
   _T5IF=0;
-  //E=EKENA;      //t
-  //Eqsteep.IF= (((_Q16)par.eqsteep)<<16)/100;//11;
   Eqsteep.IF= ((_Q16)par.eqsteep)*(INTQ16/100);//11;
   Eqshift.I= par.eqshift;
-  delterev= INTQ16 * par.Trev - Trw.IF;
-  //   delte= Tac.IF- Tcw.IF;
-  if(!E)        //four-way valve set to heating water regulating
+  delterev= INTQ16 * par.Trev - Trw.IF; //desired and actual temperature diference
+                 //four-way valve set to heating water regulating
+  if(!E)   
   {
    if(delterev <  DELTEQ) 
    {    
@@ -154,14 +154,14 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((73
   }
   else      //four-way valve set to return water
   {
-      if(delterev >  DELTREV)
-  // if(!EKENA)   
+    if(delterev >  DELTREV)
     {
        E= false;
-      integ=0;
+       integ=0;
        difla=0;
-   }
+    }
   }
+   LARGEDIF= (delterev >  DELTREVSUP);
   {    
    Tac.IF= equitherm(Eqsteep.IF, Toa.IF, Eqshift.IF);
     delte= Tac.IF- Tcw.IF;
@@ -172,7 +172,7 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((73
    //stroke= PID(delte,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
     stroke= PID(del,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
   }
-  if(!EKENA)
+  if(!EKENA || LARGEDIF)
   {         //close heating
    OC2R=1;
    OC1R= 0xffff;

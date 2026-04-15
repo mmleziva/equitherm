@@ -93,7 +93,8 @@ inline void cfgLCD(void)
 {
  //cfgDMA0();   
  //cfgUart1();
- disp[0]=0xfe;
+                        //config sequence for 2.row
+ disp[0]=0xfe;     
 // disp[1]= 0x41;//display on
  disp[1]=0x45;//set cursor
  disp[2]=0x40;//2.row
@@ -102,6 +103,7 @@ inline void cfgLCD(void)
 // wristrLCD(2);//display on
 // cfgDMA0();   
  //DMA0CONbits.CHEN=1;//start transfer
+                        //config sequence for 1.row
  disp[LONG]=0xfe;
  disp[LONG+1]=0x45;//set cursor
  disp[LONG+2]=0x0;//1.row
@@ -111,19 +113,19 @@ inline void cfgLCD(void)
 }
 
 void strc(int k)
-{
- memcpy(&disp[LONG+3],&napis[k][0],16);
+{                           //write label to  memory for 2st line of the of display  
+ memcpy(&disp[LONG+3],&napis[k][0],16); 
 }
 
 void strp(int ipar, bool NASTAV)
-{
+{                           //write data to memory for the 1st line of the display and mark "NASTAV" if the setting mode is
     if(NASTAV)
      sprintf(&disp[3],"NASTAV: ");
     else
      sprintf(&disp[3],"        ");
      sprintf(&disp[11],"%4d",ipar);
     if((k==1)||(k==2)||(k>=NVPAR))
-    {
+    {                               //write temperatures 
      disp[15]='.';
      disp[16]=decimals[k]+0x30;//t
      disp[LONG-2]= 0xb2;//'°';

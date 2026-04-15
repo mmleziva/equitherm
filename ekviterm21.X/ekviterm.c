@@ -79,39 +79,39 @@ int main(void)
     initEncoder();  
     SERVO_CLOSING=1;
     while(1)
-    {       
+    {       //if TRUN writing parameters ino LCD
       asm("clrwdt");
-      if(REQ && !TRUN)
+      if(REQ && !TRUN)  //an request to display next parameter or value
       {
           REQ= false;
           if(CONT)
-          {
+          {                         //setting value
              strp(inkrem, true);
              wristrLCD(LONG); 
           }
           else
-          {
+          {                         // next param
             strc(k);
             strp(inkrem, false);
             wristrLCD(2*LONG);
           }
       }
       else if(RETE && !TRUN)
-      {
+      {                 //an request to display new scanned temperature
               RETE= false;
               strp(inkrem, false);
               wristrLCD(LONG); 
       }
-      else if(EPW && !TRUN)
+      else if(EPW && !TRUN)//switch between changing of parameters and values 
       {
        EPW= false;
        if(CONT)
-       {
+       {        //after switch to value setting  mode  display  value
              strp(inkrem, true);
              wristrLCD(LONG); 
        }
        else
-       {
+       {        // after turn  to parameter setting also write to flash  
         qq=pq;
         _erase_flash(qq);
         for(j=0; j< NVPAR; j+=2)
