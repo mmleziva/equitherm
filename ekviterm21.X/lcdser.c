@@ -1,6 +1,8 @@
 #include "lcdser.h"
 #define TEPS 6
-char disp[2*LONG], *pt;
+//#define DMA
+__attribute__((aligned(2))) char disp[2*LONG];
+char  *pt;
 int NT;
 bool TRUN,REQ;
 int jk;
@@ -46,10 +48,12 @@ void cfgUart1(void)
   //  _U1RXIE=1;				//enable receiver interrupt
     _U1TXIF=0;
      _U1TXIP=5;  //high int priority
-    _U1TXIE=1;    
+#ifndef DMA
+   _U1TXIE=1; //t 
+#endif
 }
-/*
-inline void cfgDMA0(void)
+
+void cfgDMA0(void)
 { 
  //DMA0CONbits.CHEN=1;
  //DMA0CONbits.SIZE=1;//byte
@@ -57,12 +61,13 @@ inline void cfgDMA0(void)
  DMA0CONbits.DIR=1; //RAM-to-Peripheral
  DMA0CONbits.AMODE=0;// Post-Increment
  DMA0CONbits.MODE=1;// One-Shot
-// DMA0CNT = 2*LONG-1;
- DMA0CNT = 1;//2bytes
+ //DMA0CNT = 2*LONG-1;
+// DMA0CNT = 1;//2bytes
  DMA0REQ = 0b1100;// Select UART1 Transmitter
  DMA0PAD = (volatile unsigned int) &U1TXREG;
  DMA0STAL = __builtin_dmaoffset(disp);
- DMA0STAH = 0;
+ DMA0STAH = __builtin_dmapage(disp);
+ //DMA0STAH = 0;
  IFS0bits.DMA0IF = 0; // Clear DMA Interrupt Flag
  IEC0bits.DMA0IE = 1;// Enable DMA Interrupt
  //DMA0CONbits.CHEN=1;
@@ -73,8 +78,8 @@ void __attribute__((__interrupt__,no_auto_psv)) _DMA0Interrupt(void)
     IFS0bits.DMA0IF = 0;   // Clear the DMA0 Interrupt Flag
      LED1= !LED1;//t
    // _U1TXIF=0;//T
+     TRUN= false;//t
 } 
-*/
 
 void __attribute__((__interrupt__,no_auto_psv)) _U1TXInterrupt(void)
 {
@@ -88,11 +93,8 @@ void __attribute__((__interrupt__,no_auto_psv)) _U1TXInterrupt(void)
    else TRUN= false;
 }
 
-
 inline void cfgLCD(void)
 {
- //cfgDMA0();   
- //cfgUart1();
                         //config sequence for 2.row
  disp[0]=0xfe;     
 // disp[1]= 0x41;//display on
@@ -100,9 +102,11 @@ inline void cfgLCD(void)
  disp[2]=0x40;//2.row
  //cfgDMA0();   
  cfgUart1();
-// wristrLCD(2);//display on
-// cfgDMA0();   
+#ifdef DMA
+ cfgDMA0();
+#endif
  //DMA0CONbits.CHEN=1;//start transfer
+ // wristrLCD(2);//display on
                         //config sequence for 1.row
  disp[LONG]=0xfe;
  disp[LONG+1]=0x45;//set cursor
@@ -137,8 +141,7 @@ void strp(int ipar, bool NASTAV)
      disp[16]=' ';
      disp[LONG-2]= ' ';
      disp[LONG-1]= ' ';    
-    }
-    
+    }   
 }
 
 void wristrLCD(int N)
@@ -146,10 +149,14 @@ void wristrLCD(int N)
     NT=N;
     pt= disp;
     TRUN= true;
-    U1TXREG= *pt;
+#ifndef DMA
+    U1TXREG= *pt; //t
 //    DMA0CNT = 2*LONG-1;
  //   strcpy(&disp[LONG+3],&napis[N][0]);
   //  _U1TXIF=0;
- //   DMA0CONbits.CHEN=1;//ENABLE dma
- //   DMA0REQbits.FORCE=1;//start transfer//T
+#else
+    DMA0CNT = N -1;
+    DMA0CONbits.CHEN=1;//ENABLE dma
+    DMA0REQbits.FORCE=1;//start transfer//T
+#endif
 }

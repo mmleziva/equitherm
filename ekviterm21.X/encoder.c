@@ -35,7 +35,7 @@ void initEncoder(void)
     _init_prog_address(pq, dat);  /* get address in program space */
     qq= pq;
     qq= _memcpy_p2d16(par.A, qq, NVPAR*2);
-    wristrLCD(3);
+    wristrLCD(3);//t
     k=0;    
     inkrem= par.A[k];
     REQ= true;
