@@ -1,7 +1,8 @@
-//#include "user.h"
+#include "user.h"
 #include "regulators.h"
 #include "analog.h"
 #include "lcdser.h"
+#include "oc.h"
 #ifndef ENCODER_H
 #define ENCODER_H
 #define INK1 _RB12

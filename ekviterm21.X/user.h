@@ -25,6 +25,8 @@
 #define LED2 _LATC8
 
 #define  PUMPIN DI2
+#define SERVO_OPENING Y4
+#define SERVO_CLOSING Y5
 
 
 #define FCY (7370E3/4)

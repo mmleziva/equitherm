@@ -43,6 +43,30 @@ void initOC(void)
     _T3IE= 1;
 }
 
+void OC1_active(unsigned int st)
+{
+   Y5= 0; 
+   OC2CON1bits.OCM= 0;//disactive 
+   OC1R= st;
+   OC1CON1bits.OCM= 6;//PWM 
+}
+
+void OC2_active(unsigned int st)
+{
+   Y4= 0; 
+   OC1CON1bits.OCM= 0;//disactive 
+   OC2R= st;
+   OC2CON1bits.OCM= 6;//PWM 
+}
+
+void shut_servo(void)
+{
+   Y4= 1; 
+   Y5= 0;
+   OC1CON1bits.OCM= 0;//disactive 
+   OC2CON1bits.OCM= 0;//disactive 
+}
+
 void __attribute__((interrupt, no_auto_psv)) _OC1Interrupt (void)
 {
   _OC1IF=0;

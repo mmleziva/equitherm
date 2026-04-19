@@ -26,11 +26,10 @@ AD1CON2bits.CHPS=0B0;         //CONVERTS CH0
 AD1CON2bits.CSCNA=1;        // Scan CH0+ input
  
 AD1CON2bits.SMPI=0b011;      //int 1x to 4
-AD1CON3bits.ADCS= 0x7;       //conv. clk.
-//AD1CON3bits.ADCS= 0x40;       //conv. clk.
-AD1CON3bits.SAMC=0x9;         //sampl. time
-//AD1CON3bits.SAMC=0b11111;         //sampl. time
-
+//AD1CON3bits.ADCS= 0x7;       //conv. clk.
+AD1CON3bits.ADCS= 0x40;       //conv. clk.
+//AD1CON3bits.SAMC=0x9;         //sampl. time
+AD1CON3bits.SAMC=0b11111;         //sampl. time
 AD1CHS0bits.CH0SA=0;       //AN0 input select
 AD1CON4 = 0x0000;
 AD1CSSLbits.CSS0=1; //select AN0 for input scan
@@ -38,7 +37,7 @@ AD1CSSLbits.CSS1=1; //select AN1 for input scan
 AD1CSSLbits.CSS2=1; //select AN2 for input scan
 AD1CSSLbits.CSS3=1; //select AN3 for input scan
 AD1CON1bits.ADON = 1;
-_AD1IP=4;  //int priority
+_AD1IP=6;  //high int priority
 _AD1IE=1;
 //Delay_us(20);
 }

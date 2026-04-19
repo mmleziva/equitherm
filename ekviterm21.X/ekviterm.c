@@ -13,14 +13,14 @@
 
 //#define PLL 63
 
-#define  PUMPIN DI2
-#define SERVO_OPENING Y4
-#define SERVO_CLOSING Y5
-#define NREGS 10
+//#define  PUMPIN DI2
+//#define SERVO_OPENING Y4
+//#define SERVO_CLOSING Y5
+//#define NREGS 10
 
 #include "analog.h"
 
-unsigned long int talpre;
+//unsigned long int talpre;
 //inline
 void initOsc()
 {
@@ -31,7 +31,7 @@ void initOsc()
    // CLKDIVbits.DOZE=1;  //
     //REFOCONbits.ROON=1;    //!t     
 }
-
+/*
 //Init T2 timer				// input filter timer
 void initT2(void)
 {
@@ -42,6 +42,7 @@ void initT2(void)
  T2CONbits.TON = 1;		// turn on timer 1 
  _T2IF=0;
 } 
+*/
 
 void initIO(void)
 {
@@ -71,13 +72,13 @@ int main(void)
 {
     initOsc();//config oscilator
     initIO(); //config inputs and outputs
-    initT2(); //config timer
+    //initT2(); //config timer
     initAdc1();//config A/D converter
     initOC();//config output compare as pwm for servo 
     _GIE=1;
     cfgLCD();
     initEncoder();  
-    SERVO_CLOSING=1;
+   // SERVO_CLOSING=1;
     while(1)
     {       //if TRUN writing parameters ino LCD
       asm("clrwdt");

@@ -10,7 +10,7 @@
 #define DELTREVSUP (10*INTQ16)
 volatile fixed T[4],Tac;
 bool INK1O,SWOL,CONT,INK1F,INK1FO,INK2F,INK2O;
-bool CW,CCW, E, EKENA,EPW, TSCAN,RETE,REGRET, LARGEDIF;
+bool CW,CCW, E, EKENA,EPW, TSCAN,RETE,REGRET, LARGEDIF ;
 volatile PARAMETERS par;
 unsigned int j, stroke, nek;
 int volatile inkrem, a, minim;
@@ -31,7 +31,7 @@ void initEncoder(void)
     T4CONbits.TON = 1;		// turn on timer4 
     _T4IF=0;
     _T4IE=1;
-    _T4IP=3;    //priority
+    _T4IP=5;    //priority
     _init_prog_address(pq, dat);  /* get address in program space */
     qq= pq;
     qq= _memcpy_p2d16(par.A, qq, NVPAR*2);
@@ -39,6 +39,7 @@ void initEncoder(void)
     k=0;    
     inkrem= par.A[k];
     REQ= true;
+  //  shut_servo();  
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)kHz= 1,1ms
@@ -161,31 +162,42 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((73
        difla=0;
     }
   }
-   LARGEDIF= (delterev >  DELTREVSUP);
+  LARGEDIF= (delterev >  DELTREVSUP);
   {    
    Tac.IF= equitherm(Eqsteep.IF, Toa.IF, Eqshift.IF);
     delte= Tac.IF- Tcw.IF;
    if(E)
+   {    
+       LED2=1;
        del= delte;
+   }
    else
+   {
+       LED2 =0;
        del = -delterev;
+   }
    //stroke= PID(delte,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
     stroke= PID(del,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
   }
   if(!EKENA || LARGEDIF)
   {         //close heating
-   OC2R=1;
-   OC1R= 0xffff;
+    shut_servo();  
+    integ=0;
+    difla=0;
+  // OC2R=1;
+  // OC1R= 0xffff;
   }    
   else if(!signum)
   {         //open heating
-   OC1R=0;
-   OC2R= stroke;
+    OC2_active(stroke);
+   //OC1R=0;
+   //OC2R= stroke;
   }
   else
   {         //close heating
-   OC2R=0;
-   OC1R= stroke;
+      OC1_active(stroke);
+   //OC2R=0;
+   //OC1R= stroke;
   }
 }
 

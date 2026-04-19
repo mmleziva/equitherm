@@ -1,6 +1,6 @@
 #include "lcdser.h"
-#define TEPS 6
-//#define DMA
+//#define TEPS 6
+#define DMA     //if DMA is used 
 __attribute__((aligned(2))) char disp[2*LONG];
 char  *pt;
 int NT;
@@ -43,21 +43,21 @@ void cfgUart1(void)
 	U1STAbits.URXISEL  = 0;			// Interrupt after one RX character is received
 	U1MODEbits.UARTEN   = 1;		// Enable UART
 	U1STAbits.UTXEN     = 1;		// Enable UART Tx
- //   IEC4bits.U1EIE = 1;             //enable error com interrupt
-    _U1RXIF=0;
-  //  _U1RXIE=1;				//enable receiver interrupt
-    _U1TXIF=0;
-     _U1TXIP=5;  //high int priority
+   _U1TXIF=0;
 #ifndef DMA
+ //   IEC4bits.U1EIE = 1;             //enable error com interrupt
+    _U1TXIP=5;  //high int priority
+ //  _U1RXIE=1;				//enable receiver interrupt
    _U1TXIE=1; //t 
+ 
 #endif
 }
 
 void cfgDMA0(void)
 { 
  //DMA0CONbits.CHEN=1;
- //DMA0CONbits.SIZE=1;//byte
-    DMA0CONbits.SIZE=0;//word
+ DMA0CONbits.SIZE=1;//byte
+ //   DMA0CONbits.SIZE=0;//word
  DMA0CONbits.DIR=1; //RAM-to-Peripheral
  DMA0CONbits.AMODE=0;// Post-Increment
  DMA0CONbits.MODE=1;// One-Shot
@@ -68,6 +68,7 @@ void cfgDMA0(void)
  DMA0STAL = __builtin_dmaoffset(disp);
  DMA0STAH = __builtin_dmapage(disp);
  //DMA0STAH = 0;
+ _DMA0IP=1;     //low int priority
  IFS0bits.DMA0IF = 0; // Clear DMA Interrupt Flag
  IEC0bits.DMA0IE = 1;// Enable DMA Interrupt
  //DMA0CONbits.CHEN=1;
@@ -80,7 +81,7 @@ void __attribute__((__interrupt__,no_auto_psv)) _DMA0Interrupt(void)
    // _U1TXIF=0;//T
      TRUN= false;//t
 } 
-
+/*
 void __attribute__((__interrupt__,no_auto_psv)) _U1TXInterrupt(void)
 {
     NT--;
@@ -92,6 +93,7 @@ void __attribute__((__interrupt__,no_auto_psv)) _U1TXInterrupt(void)
    }
    else TRUN= false;
 }
+*/
 
 inline void cfgLCD(void)
 {
@@ -146,10 +148,10 @@ void strp(int ipar, bool NASTAV)
 
 void wristrLCD(int N)
 {
-    NT=N;
-    pt= disp;
     TRUN= true;
 #ifndef DMA
+     NT=N;
+    pt= disp;
     U1TXREG= *pt; //t
 //    DMA0CNT = 2*LONG-1;
  //   strcpy(&disp[LONG+3],&napis[N][0]);
