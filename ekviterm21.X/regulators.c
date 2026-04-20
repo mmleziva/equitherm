@@ -7,20 +7,14 @@ bool signum;
 _Q16 integ,difla;
 
 /*calc temperature of Pt1000 sensor with pull up resistor 1000ohm about -50 ..+100°C*/
-/*_Q16 Pt1000(_Q16 adc)
-{
-     fixed aux, coef,delta;
-     aux.IF=adc;
-     coef.I=1;
-     coef.F=0;
-     delta.IF=  (aux.IF >> 15);
-     coef.IF  += delta.IF;
-     aux.IF= _Q16mpy(aux.IF, coef.IF);
-     aux.IF= aux.IF >>6;
-     return aux.IF;
-}
-*/
+
 _Q16 Pt1000(_Q16 adc)
+/*
+ * u= U/Um= Rt/(R+Rt); R=1000ohm,  Rt=(1+kt*T)*1000ohm, Pt1000: kt=0.0039083;
+ * u=   (1 + kt*T)/ (2 + kt*T); 
+ * kt*T= (2u-1)/(1-u) = 2 * u' / (1/2 - u') = = 4 * u' / (1 - 2 * u') =  4 * u' * (1 + 2 * u' + ...);  u' = u - 1/2;
+ * T ~= (1 / kt)* (1 + 2 * u'); (1 / kt)= KT_INV = (1/0.0039083);
+ */
 {
      fixed aux, coef,delta,pre;
      delta.IF=adc>>16;

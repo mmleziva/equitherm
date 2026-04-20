@@ -44,6 +44,7 @@ _AD1IE=1;
 
 void __attribute__((interrupt, no_auto_psv)) _AD1Interrupt (void)
 {  
+  //  bool B= false;
   _AD1IF=0;
   
   ad[0]=ADC1BUF0;
@@ -54,8 +55,10 @@ void __attribute__((interrupt, no_auto_psv)) _AD1Interrupt (void)
   {                 //first AI
       NORMAL= true;//t
       for (ji=0; ji<4; ji++)  
-      fil[ji].I= ad[ji]; 
-      fil[ji].F=0;
+      {
+        fil[ji].I= ad[ji]; 
+        fil[ji].F=0;
+      }
   }
   else
   {                 //simple filtering
@@ -63,6 +66,7 @@ void __attribute__((interrupt, no_auto_psv)) _AD1Interrupt (void)
       {        
           deltafil[ji] = ((_Q16)(ad[ji])<<16)- fil[ji].IF;  
           fil[ji].IF += (deltafil[ji]>>8);
+          
       }       
   }
 }

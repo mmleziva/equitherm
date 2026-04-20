@@ -77,8 +77,6 @@ void cfgDMA0(void)
 void __attribute__((__interrupt__,no_auto_psv)) _DMA0Interrupt(void)
 {  
     IFS0bits.DMA0IF = 0;   // Clear the DMA0 Interrupt Flag
-     LED1= !LED1;//t
-   // _U1TXIF=0;//T
      TRUN= false;//t
 } 
 /*

@@ -64,6 +64,8 @@ void initIO(void)
     
     _TRISC7= 0;     //enable LED1
     _TRISC8= 0;     //enable LED2    
+    LED1= true;
+     LED2= true;
 }
 
 
@@ -78,7 +80,6 @@ int main(void)
     _GIE=1;
     cfgLCD();
     initEncoder();  
-   // SERVO_CLOSING=1;
     while(1)
     {       //if TRUN writing parameters ino LCD
       asm("clrwdt");

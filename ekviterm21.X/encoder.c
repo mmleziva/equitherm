@@ -8,9 +8,18 @@
 #define DELTEQ  (2*INTQ16)
 #define DELTREV (4*INTQ16)
 #define DELTREVSUP (10*INTQ16)
+#define OPENTIME 30000  //ms
+#define FULOPTIME 20000  //ms
+#define CLOSETIME -5000    //ms
+//#define OPENBITS (OPENTIME / 0.1392)
+//#define CLOSEBITS (CLOSETIME / 0.1392)
+static const long OPENBITS=  ((long)(((int64_t)OPENTIME * 10000) / 1392));
+static const long FULOPBITS=  ((long)(((int64_t)FULOPTIME * 10000) / 1392));
+static const long CLOSEBITS=  ((long)(((int64_t)CLOSETIME * 10000) / 1392));
 volatile fixed T[4],Tac;
+long int opentime;
 bool INK1O,SWOL,CONT,INK1F,INK1FO,INK2F,INK2O;
-bool CW,CCW, E, EKENA,EPW, TSCAN,RETE,REGRET, LARGEDIF ;
+bool CW,CCW, E, EKENA,EPW, TSCAN,RETE,REGRET, LARGEDIF ,SYNCLED;
 volatile PARAMETERS par;
 unsigned int j, stroke, nek;
 int volatile inkrem, a, minim;
@@ -21,7 +30,7 @@ int __attribute__((space(prog),aligned(_FLASH_PAGE*2))) dat[_FLASH_PAGE]={100,0,
 //inline 
 void initEncoder(void)
 {
-    LED1=LED2=1;
+  //  LED1=LED2=1;
     CNPDBbits.CNPDB13=1;//pull down
     CNPDBbits.CNPDB12=1;//pull down
     CNPDAbits.CNPDA10=1;//pull down
@@ -38,8 +47,7 @@ void initEncoder(void)
     wristrLCD(3);//t
     k=0;    
     inkrem= par.A[k];
-    REQ= true;
-  //  shut_servo();  
+    REQ= true;  
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)kHz= 1,1ms
@@ -51,7 +59,6 @@ void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)k
   INK2O=INK2;
   if(INK1F & !INK1FO)
   {
-      LED1= !LED1;//t
      if(INK2F)
         CCW= true;
      else
@@ -62,11 +69,9 @@ void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)k
     CONT= !CONT; 
     if(CONT)
     {
-     LED1= true;   
     }
     else
     {
-        LED1= false;;  
         par.A[k]= inkrem;
     }
     EPW= true;
@@ -135,6 +140,14 @@ void __attribute__((interrupt, no_auto_psv)) _T4Interrupt (void)//2048/(7370/4)k
     }
    }
   }
+  if(!EKENA & LED2 & SYNCLED)
+  {
+      if(opentime <=  CLOSEBITS)  //allready full closed
+          LED2= false;
+      else 
+         opentime -= 8;
+  }
+       
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((7370/4)kHz)= 8850ms 
@@ -162,42 +175,77 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((73
        difla=0;
     }
   }
-  LARGEDIF= (delterev >  DELTREVSUP);
   {    
    Tac.IF= equitherm(Eqsteep.IF, Toa.IF, Eqshift.IF);
     delte= Tac.IF- Tcw.IF;
    if(E)
    {    
-       LED2=1;
+       Y1=0;
        del= delte;
    }
    else
    {
-       LED2 =0;
+       Y1=1;
        del = -delterev;
    }
    //stroke= PID(delte,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
     stroke= PID(del,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
   }
-  if(!EKENA || LARGEDIF)
+ // if(!EKENA || LARGEDIF)
+  if(!EKENA)
   {         //close heating
-    shut_servo();  
+    SYNCLED= true;  
+    LED1= true;
+    shut_servo(true);  
     integ=0;
     difla=0;
-  // OC2R=1;
-  // OC1R= 0xffff;
   }    
   else if(!signum)
   {         //open heating
-    OC2_active(stroke);
-   //OC1R=0;
-   //OC2R= stroke;
+    SYNCLED= false;  
+    if(!LED2)//if servo is closed
+    {
+         LED2= true;// no shine, servo is not closed
+         opentime=0; //zero position
+    }
+    else
+    if(LED1) // if servo is not full open
+    {
+        if (opentime >= OPENBITS)//allready full open
+        {
+            shut_servo(false); //switch servo off
+            LED1= false;        //LED1 shine,servo is open
+        }
+        else  
+        {
+            OC2_active(stroke+4); //opening
+            opentime+= stroke;//t= 256  / ((7370/4)kHz) * stroke = (1024/7370)ms* stroke = 0,1392 ms * stroke
+        }
+     }
   }
-  else
-  {         //close heating
-      OC1_active(stroke);
-   //OC2R=0;
-   //OC1R= stroke;
+  else      //servo closing
+  {
+     SYNCLED= false;
+     if(!LED1)//if servo is open
+    {
+         LED1= true;    //no shine, servo is not open
+         opentime= FULOPBITS;//FULL OPEN POSITION
+    }
+    else
+    if(LED2) //servo is not full closed
+    {
+      //close heating
+        if(opentime <=  CLOSEBITS)  //allready full closed
+        {
+            shut_servo(false);  //switch servo off
+            LED2= false;        //LED2 shine, servo is closed
+        }
+        else
+        {
+            OC1_active(stroke+4);//closing
+            opentime -= stroke; 
+           }
+       }
   }
 }
 
@@ -205,6 +253,7 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((73
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt (void)//4*65500/((7370/4)kHz)= 136ms 
 {
   _T3IF=0;
+  /*
   switch(k)
   {
             case 0:Y1=1;    //eqsteep equitherm 
@@ -229,6 +278,7 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt (void)//4*65500/((7370
             break;           
             default: break;
    }
+   */ 
   Toa.IF= Pt1000(fil[0].IF);//outside air temperature 
   Tcw.IF= Pt1000(fil[1].IF);//heating water temperature
   Trw.IF= Pt1000(fil[2].IF);//reverse water temperature
@@ -241,10 +291,13 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt (void)//4*65500/((7370
   par.Taci=Tac.I;
   decimals[NVPAR+3]= (uint16_t)(((uint32_t)Tac.F *10 )>>16);
    TSCAN= true;
+   Y2 = (par.Tcwi > 120) | (par.Tcwi < -10) | (par.Trwi > 120) | (par.Trwi < -10) | (par.Toai > 70) | (par.Toai < -50) ;//temp fault
+   Y3 = !Y3;            //blik
 }
 
-void __attribute__((interrupt, no_auto_psv)) _OC3Interrupt (void)
+/*void __attribute__((interrupt, no_auto_psv)) _OC3Interrupt (void)
 {
   _OC3IF=0;
   Y1=Y2=Y3=Y6=Y7=0;
 }
+*/
