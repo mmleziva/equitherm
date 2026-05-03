@@ -23,7 +23,7 @@ bool CW,CCW, E, EKENA,EPW, TSCAN,RETE,REGRET, LARGEDIF ,SYNCLED;
 volatile PARAMETERS par;
 unsigned int j, stroke, nek;
 int volatile inkrem, a, minim;
- _Q16  delte,delterev,del;
+ _Q16  delte,delterev,del, retreq, equireq;
  fixed Eqshift,Eqsteep;
 _prog_addressT pq,qq;
 int __attribute__((space(prog),aligned(_FLASH_PAGE*2))) dat[_FLASH_PAGE]={100,0,20,4,0,0,64};
@@ -155,7 +155,8 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((73
   _T5IF=0;
   Eqsteep.IF= ((_Q16)par.eqsteep)*(INTQ16/100);//11;
   Eqshift.I= par.eqshift;
-  delterev= INTQ16 * par.Trev - Trw.IF; //desired and actual temperature diference
+  retreq= INTQ16 * par.Trev;    //Q16 writing style of return water requvired temp
+  delterev= retreq - Trw.IF; //desired and actual temperature diference for return water
                  //four-way valve set to heating water regulating
   if(!E)   
   {
@@ -176,11 +177,15 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((73
     }
   }
   {    
-   Tac.IF= equitherm(Eqsteep.IF, Toa.IF, Eqshift.IF);
-    delte= Tac.IF- Tcw.IF;
+   Tac.IF= equitherm(Eqsteep.IF, Toa.IF, Eqshift.IF) ;
+   if(Tac.IF >= retreq)     //max(Tac.IF, retreq); if equitherm temp is lower then return temp, must use return temp in place of equitherm 
+        equireq=  Tac.IF;             
+   else
+       equireq=  retreq;    
+   delte= equireq- Tcw.IF;
    if(E)
    {    
-       Y1=0;
+       Y1=0;            //LED signal out
        del= delte;
    }
    else
@@ -188,8 +193,7 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt (void)//256*65500/((73
        Y1=1;
        del = -delterev;
    }
-   //stroke= PID(delte,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
-    stroke= PID(del,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
+   stroke= PID(del,(par.P<<6),(par.I<<4), (par.D<<7), (par.Lim)<<8);
   }
  // if(!EKENA || LARGEDIF)
   if(!EKENA)
